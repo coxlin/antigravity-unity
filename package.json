@@ -1,0 +1,17 @@
+{
+  "name": "com.coxlin.ide.antigravity",
+  "version": "1.0.0",
+  "displayName": "Google Antigravity Editor",
+  "description": "Unity External Code Editor integration for Google Antigravity IDE with .csproj/.sln generation, Windows auto-discovery, config scaffolding, and menu actions.",
+  "unity": "2022.3",
+  "keywords": [
+    "ide",
+    "antigravity",
+    "codeeditor",
+    "csproj",
+    "csharp"
+  ],
+  "author": {
+    "name": "Coxlin"
+  }
+}
