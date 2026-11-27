@@ -9,11 +9,27 @@ namespace Coxlin.Antigravity.Editor
     public static class AntigravityDiscovery
     {
         public const string EditorName = "Google Antigravity";
+        public const string IdeEditorName = "Antigravity IDE";
         public const string CustomExePathPrefKey = "Antigravity_CustomExePath";
 
         private const string ExeFileName = "Antigravity.exe";
+        private const string IdeExeFileName = "Antigravity IDE.exe";
         private const string CmdFileName = "antigravity.cmd";
         private const string InstallFolderName = "Antigravity";
+        private const string IdeInstallFolderName = "Antigravity IDE";
+
+        private static readonly (string FolderName, string ExeName)[] KnownInstallLocations =
+        {
+            (IdeInstallFolderName, IdeExeFileName),
+            (InstallFolderName, ExeFileName)
+        };
+
+        private static readonly string[] SupportedExecutableNames =
+        {
+            IdeExeFileName,
+            ExeFileName,
+            CmdFileName
+        };
 
         public static string SavedCustomPath
         {
@@ -41,8 +57,15 @@ namespace Coxlin.Antigravity.Editor
             try
             {
                 string fileName = Path.GetFileName(path);
-                return string.Equals(fileName, ExeFileName, StringComparison.OrdinalIgnoreCase)
-                       || string.Equals(fileName, CmdFileName, StringComparison.OrdinalIgnoreCase);
+                foreach (string supportedName in SupportedExecutableNames)
+                {
+                    if (string.Equals(fileName, supportedName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
             catch (ArgumentException)
             {
@@ -81,19 +104,22 @@ namespace Coxlin.Antigravity.Editor
                     {
                         // The launcher next to the bin folder avoids spawning a visible console window.
                         DirectoryInfo parent = Directory.GetParent(directory);
-                        if (parent != null)
+                        foreach (string exeName in new[] { IdeExeFileName, ExeFileName })
                         {
-                            string parentExe = Path.Combine(parent.FullName, ExeFileName);
-                            if (File.Exists(parentExe))
+                            if (parent != null)
                             {
-                                return parentExe;
+                                string parentExe = Path.Combine(parent.FullName, exeName);
+                                if (File.Exists(parentExe))
+                                {
+                                    return parentExe;
+                                }
                             }
-                        }
 
-                        string siblingExe = Path.Combine(directory, ExeFileName);
-                        if (File.Exists(siblingExe))
-                        {
-                            return siblingExe;
+                            string siblingExe = Path.Combine(directory, exeName);
+                            if (File.Exists(siblingExe))
+                            {
+                                return siblingExe;
+                            }
                         }
                     }
                     catch (Exception exception) when (IsPathException(exception))
@@ -121,14 +147,11 @@ namespace Coxlin.Antigravity.Editor
 
             if (!string.IsNullOrWhiteSpace(localAppData))
             {
-                AddCandidate(
-                    installations,
-                    seenPaths,
-                    SafeCombine(localAppData, "Programs", InstallFolderName, ExeFileName));
+                AddKnownLocations(installations, seenPaths, Path.Combine(localAppData, "Programs"));
             }
 
-            AddProgramFilesCandidate(installations, seenPaths, Environment.GetEnvironmentVariable("ProgramFiles"));
-            AddProgramFilesCandidate(installations, seenPaths, Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
+            AddKnownLocations(installations, seenPaths, Environment.GetEnvironmentVariable("ProgramFiles"));
+            AddKnownLocations(installations, seenPaths, Environment.GetEnvironmentVariable("ProgramFiles(x86)"));
 
             string pathVariable = Environment.GetEnvironmentVariable("PATH");
             if (!string.IsNullOrWhiteSpace(pathVariable))
@@ -143,8 +166,10 @@ namespace Coxlin.Antigravity.Editor
 
                     try
                     {
-                        AddCandidate(installations, seenPaths, Path.Combine(directory, ExeFileName));
-                        AddCandidate(installations, seenPaths, Path.Combine(directory, CmdFileName));
+                        foreach (string executableName in SupportedExecutableNames)
+                        {
+                            AddCandidate(installations, seenPaths, Path.Combine(directory, executableName));
+                        }
                     }
                     catch (Exception exception) when (IsPathException(exception))
                     {
@@ -174,20 +199,43 @@ namespace Coxlin.Antigravity.Editor
             return installations.Length > 0 ? installations[0].Path : null;
         }
 
-        private static void AddProgramFilesCandidate(
+        public static string GetInstallationName(string path)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                try
+                {
+                    if (string.Equals(Path.GetFileName(path), IdeExeFileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return IdeEditorName;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Fall through to default editor name.
+                }
+            }
+
+            return EditorName;
+        }
+
+        private static void AddKnownLocations(
             List<CodeEditor.Installation> installations,
             HashSet<string> seenPaths,
-            string programFiles)
+            string baseDirectory)
         {
-            if (string.IsNullOrWhiteSpace(programFiles))
+            if (string.IsNullOrWhiteSpace(baseDirectory))
             {
                 return;
             }
 
-            AddCandidate(
-                installations,
-                seenPaths,
-                SafeCombine(programFiles, InstallFolderName, ExeFileName));
+            foreach ((string folderName, string exeName) in KnownInstallLocations)
+            {
+                AddCandidate(
+                    installations,
+                    seenPaths,
+                    SafeCombine(baseDirectory, folderName, exeName));
+            }
         }
 
         private static void AddCandidate(
@@ -213,7 +261,7 @@ namespace Coxlin.Antigravity.Editor
 
             installations.Add(new CodeEditor.Installation
             {
-                Name = EditorName,
+                Name = GetInstallationName(resolvedPath),
                 Path = resolvedPath
             });
         }

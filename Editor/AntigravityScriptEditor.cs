@@ -45,7 +45,7 @@ namespace Coxlin.Antigravity.Editor
                     AntigravityDiscovery.SavedCustomPath = resolvedPath;
                     installation = new CodeEditor.Installation
                     {
-                        Name = AntigravityDiscovery.EditorName,
+                        Name = AntigravityDiscovery.GetInstallationName(resolvedPath),
                         Path = resolvedPath
                     };
                     return true;
