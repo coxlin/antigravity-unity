@@ -15,6 +15,7 @@ namespace Coxlin.Antigravity.Editor
         private const string ExeFileName = "Antigravity.exe";
         private const string IdeExeFileName = "Antigravity IDE.exe";
         private const string CmdFileName = "antigravity.cmd";
+        private const string IdeCmdFileName = "antigravity-ide.cmd";
         private const string InstallFolderName = "Antigravity";
         private const string IdeInstallFolderName = "Antigravity IDE";
 
@@ -28,6 +29,7 @@ namespace Coxlin.Antigravity.Editor
         {
             IdeExeFileName,
             ExeFileName,
+            IdeCmdFileName,
             CmdFileName
         };
 

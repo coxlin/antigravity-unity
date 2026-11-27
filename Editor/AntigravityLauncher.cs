@@ -202,6 +202,16 @@ namespace Coxlin.Antigravity.Editor
                     CreateNoWindow = true
                 };
 
+                string cliScriptPath = GetCliScriptPath(fileName);
+                if (!string.IsNullOrEmpty(cliScriptPath))
+                {
+                    // VS Code-based builds require ELECTRON_RUN_AS_NODE=1 + out/cli.js
+                    // so folder/workspace and -g file:line:column arguments are parsed.
+                    startInfo.Environment["ELECTRON_RUN_AS_NODE"] = "1";
+                    startInfo.Environment.Remove("VSCODE_DEV");
+                    startInfo.Arguments = $"\"{cliScriptPath}\" {finalArguments}";
+                }
+
                 using (Process process = Process.Start(startInfo))
                 {
                     return process != null;
@@ -212,6 +222,31 @@ namespace Coxlin.Antigravity.Editor
                 UnityEngine.Debug.LogError(
                     $"[Antigravity] Failed to launch '{executablePath}' with arguments '{arguments}': {exception.Message}");
                 return false;
+            }
+        }
+
+        private static string GetCliScriptPath(string executablePath)
+        {
+            if (string.IsNullOrWhiteSpace(executablePath) ||
+                !executablePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            try
+            {
+                string directory = Path.GetDirectoryName(executablePath);
+                if (string.IsNullOrEmpty(directory))
+                {
+                    return null;
+                }
+
+                string cliPath = Path.Combine(directory, "resources", "app", "out", "cli.js");
+                return File.Exists(cliPath) ? cliPath : null;
+            }
+            catch (Exception exception) when (IsPathException(exception))
+            {
+                return null;
             }
         }
 
