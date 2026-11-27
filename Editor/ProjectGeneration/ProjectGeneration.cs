@@ -1,6 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
+using UnityEditor;
+using UnityEditor.Compilation;
+using UnityEngine;
 using Assembly = UnityEditor.Compilation.Assembly;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 

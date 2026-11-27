@@ -1,3 +1,5 @@
+using System;
+
 namespace Coxlin.Antigravity.Editor.ProjectGeneration
 {
     [Flags]
