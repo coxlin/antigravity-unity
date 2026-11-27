@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Compilation;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using Assembly = UnityEditor.Compilation.Assembly;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
